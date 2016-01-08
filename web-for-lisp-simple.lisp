@@ -20,7 +20,7 @@
   (setf (acceptor-document-root *acceptor*)
 	"c:/Users/Administrator/Desktop/program/gui-test/www/")
   (start *acceptor*))
-(start-server)
+;;(start-server)
 
 (defclass game ()
   ((name :reader name :initarg :name)
@@ -48,7 +48,6 @@
 
 (defmacro define-url-fn ((name) &body body)
   `(progn
-
      (defun ,name ()
        ,@body)
      (push (create-prefix-dispatcher ,(format nil "/~(~a~).htm" name) ',name) *dispatch-table*)))
@@ -81,24 +80,26 @@
 
 (define-url-fn (new-game)
   (standard-page (:title "Add a new game")
-    (:h1 "Add a new game to the chart")
+    (:h1 "Add a new game to the chart ~")
     (:form :action "/game-added.htm" :method "post" 
 	   :onsubmit (ps-inline
-		      (when (= name.value "")
+		      (when (= newname.value "")
 			(alert "Please enter a name.")
 			(return false)))
 	   (:p "What is the name of the game?" (:br)
-	       (:input :type "text" :name "name" :class "txt"))
+	       (:input :type "text" :name "newname" :class "txt"))
 	   (:p (:input :type "submit" :value "Add" :class "btn")))))
 
 (define-url-fn (game-added)
-  (let ((name (parameter "name")))
+  (let ((name (parameter "newname")))
     (unless (or (null name) (zerop (length name)))
       (add-game name))
     (redirect "/retro-games.htm"))) 
 
 (define-url-fn (vote)
-  (let ((game (game-from-name (parameter "name"))))
+  (let ((game (game-from-name (parameter "newname"))))
     (if game
 	(vote-for game))
     (redirect "/retro-games.htm"))) 
+
+

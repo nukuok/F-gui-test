@@ -1,7 +1,7 @@
 (in-package :cl-user)
 (ql:quickload :cl-who)
 (ql:quickload :parenscript)
-(ql:quickload :hunchentoot)
+(ql:quickload :cffi)
 (pushnew "." cffi:*FOREIGN-LIBRARY-DIRECTORIES*)
 (ql:quickload :hunchentoot)
 
@@ -25,8 +25,9 @@
 (defclass game ()
   ((name :reader name :initarg :name)
    (votes :accessor votes :initarg :votes :initform 0)))
-(push (create-static-file-dispatcher-and-handler "/logo.jpg" "imgs/Commodore64.jpg") *dispatch-table*)
-(push (create-static-file-dispatcher-and-handler "/retro.css" "css/retro.css") *dispatch-table*)
+
+;;(push (create-static-file-dispatcher-and-handler "/logo.jpg" "imgs/Commodore64.jpg") *dispatch-table*)
+;;(push (create-static-file-dispatcher-and-handler "/retro.css" "css/retro.css") *dispatch-table*)
 
 (defmethod vote-for (user-selected-game)
   (incf (votes user-selected-game)))
@@ -55,38 +56,40 @@
 (defmacro standard-page ((&key title) &body body)
   `(with-html-output-to-string (*standard-output* nil :prologue t :indent t)
      (:html :xmlns "http://www.w3.org/1999/xhtml"  :xml\:lang "en" :lang "en"
-       (:head 
-	(:meta :http-equiv "Content-Type" :content "text/html;charset=utf-8")
-	(:title ,title)
-	(:link :type "text/css" :rel "stylesheet" :href "/retro.css"))
-       (:body 
-	(:div :id "header"
-	      (:img :src "/logo.jpg" :alt "Commodore 64" :class "logo")
-	      (:span :class "strapline" "Vote on your favourite Retro Game"))
-	,@body))))
+	    (:head 
+	     (:meta :http-equiv "Content-Type" :content "text/html;charset=utf-8")
+	     (:title ,title)
+	     (:link :type "text/css" :rel "stylesheet" :href "/retro.css"))
+	    (:body 
+	     (:div :id "header"
+		   (:img :src "/logo.jpg" :alt "Commodore 64" :class "logo")
+		   (:span :class "strapline" "Vote on your favourite Retro Game"))
+	     ,@body))))
 
 (define-url-fn (retro-games)
   (standard-page (:title "Top Retro Games")
-     (:h1 "Vote on your all time favourite retro games!")
-     (:p "Missing a game? Make it available for votes "
-	 (:a :href "new-game.htm" "here"))
-     (:h2 "Current stand")
-     (:div :id "chart"        (:ol
-	(dolist (game (games))
-	 (htm  
-	  (:li (:a :href (format nil "vote.htm?name=~a" (name game)) "Vote!")
-	       (fmt "~A with ~d votes" (name game) (votes game)))))))))
+    (:h1 "Vote on your all time favourite retro games!")
+    (:p "Missing a game? Make it available for votes "
+	(:a :href "new-game.htm" "here"))
+    (:h2 "Current stand")
+    (:div :id "chart"
+	  (:ol
+	   (dolist (game (games))
+	     (htm  
+	      (:li (:a :href (format nil "vote.htm?name=~a" (name game)) "Vote!")
+		   (fmt "~A with ~d votes" (name game) (votes game)))))))))
 
 (define-url-fn (new-game)
   (standard-page (:title "Add a new game")
-     (:h1 "Add a new game to the chart")
-     (:form :action "/game-added.htm" :method "post" 
-	    :onsubmit (ps-inline 		       (when (= name.value "")
-			 (alert "Please enter a name.")
-			 (return false)))
-       (:p "What is the name of the game?" (:br)
-	   (:input :type "text" :name "name" :class "txt"))
-       (:p (:input :type "submit" :value "Add" :class "btn")))))
+    (:h1 "Add a new game to the chart")
+    (:form :action "/game-added.htm" :method "post" 
+	   :onsubmit (ps-inline
+		      (when (= name.value "")
+			(alert "Please enter a name.")
+			(return false)))
+	   (:p "What is the name of the game?" (:br)
+	       (:input :type "text" :name "name" :class "txt"))
+	   (:p (:input :type "submit" :value "Add" :class "btn")))))
 
 (define-url-fn (game-added)
   (let ((name (parameter "name")))

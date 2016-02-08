@@ -97,7 +97,8 @@
     (redirect "/retro-games.htm"))) 
 
 (define-url-fn (vote)
-  (let ((game (game-from-name (parameter "newname"))))
+  (let ((game (game-from-name (parameter "name"))))
+    (format t "abcdefghil")
     (if game
 	(vote-for game))
     (redirect "/retro-games.htm"))) 

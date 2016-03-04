@@ -75,7 +75,7 @@
 	  (:ol
 	   (dolist (game (games))
 	     (htm  
-	      (:li (:a :href (format nil "vote.htm?name=~a" (name game)) "Vote!")
+	      (:li (:a :href (format nil "vote.htm?vname=~a" (name game)) "Vote!")
 		   (fmt "~A with ~d votes" (name game) (votes game)))))))))
 
 (define-url-fn (new-game)
@@ -97,9 +97,8 @@
     (redirect "/retro-games.htm"))) 
 
 (define-url-fn (vote)
-  (let ((game (game-from-name (parameter "newname"))))
+  (let ((game (game-from-name (parameter "vname"))))
     (if game
 	(vote-for game))
     (redirect "/retro-games.htm"))) 
-
 

@@ -36,9 +36,9 @@
 	    (:body 
 	     ,@body))))
 
-(define-url-fn (new-game)
-  (standard-page (:title "Command and result")
-    (:h1 "Add a new game to the chart ~")
+(define-url-fn (page1)
+  (standard-page (:title "IO")
+    (:h1 "Input to ssh")
     (:form :action "/game-added.htm" :method "post" 
 	   :onsubmit (ps-inline
 		      (when (= newname.value "")
@@ -46,6 +46,34 @@
 			(return false)))
 	   (:p "What is the name of the game?" (:br)
 	       (:input :type "text" :name "newname" :class "txt"))
-	   (:p (:input :type "submit" :value "Add" :class "btn")))))
+	   (:p (:input :type "submit" :value "Add" :class "btn")))
+    (:h1 "Output from ssh")))
 
+;;;; ssh part
+(defun read-from-stream-wait (stream listen-ng-times result)
+  (cond ((< listen-ng-times 0) (coerce result 'string))
+	((listen stream)
+	 (read-from-stream-wait stream listen-ng-times
+				(append result (list (read-char stream)))))
+	(t (sleep 0.1)
+	   (read-from-stream-wait stream (- listen-ng-times 1) result))))
+
+(defun test (args)
+  (let*
+      ((proc
+	(run-program (car args) (cdr args)
+		     :input :stream :output :stream :wait nil))
+       (in (external-process-input-stream proc))
+       (out (external-process-output-stream proc)))
+    (format t "~A" (read-from-stream-wait out 10 nil))
+    (loop 
+       (let ((command (read-line)))
+	 (when (equal command "program-exit") (return))
+	 (format in "~A~%" command)
+	 (finish-output in))
+       (format t "~A" (read-from-stream-wait out 10 nil)))
+    (format in "exit~%")
+    (finish-output in)))
+
+(test (list "plink" "-pw" "telecom" "telecom@10.22.98.203"))
 

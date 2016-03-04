@@ -57,7 +57,7 @@
 
 (asdf:load-system :cffi-grovel)
 
-###############
+;;;;
 (setf test-stream (run-program "plink" (list "-pw" "telecom" "telecom@10.22.98.203") :input :stream :output :stream :wait nil))
 (setf *in* (external-process-input-stream test-stream))
 (setf *out* (external-process-output-stream test-stream))
@@ -75,7 +75,7 @@
 
 
 
-###############
+;;;;
 (defvar *in*)
 (defvar *out*)
 
@@ -99,7 +99,7 @@ http://stackoverflow.com/questions/15988870/how-to-interact-with-a-process-input
 
 
 
-#############
+;;;;
 (defvar line-text)
 (defvar is-last-line)
 (multiple-value-bind (line-text is-last-line) (read-line *out*)
@@ -110,7 +110,7 @@ http://stackoverflow.com/questions/15988870/how-to-interact-with-a-process-input
       (format *in* command-line)
       (finish-output *in*))))
 
-#############
+;;;;
 (let* ((test-stream (run-program "plink" (list "-pw" "telecom" "telecom@10.22.98.203")
 				 :input :stream :output :stream :wait nil))
        (in (external-process-input-stream test-stream))
@@ -128,7 +128,7 @@ http://stackoverflow.com/questions/15988870/how-to-interact-with-a-process-input
 
 
 
-############
+;;;;
 (setf *temp* (make-string-input-stream "abc
 def
 ghi"))
@@ -137,7 +137,7 @@ ghi"))
 (print (read-line *temp*))
 (print (read-line *temp*))
 
-##############
+;;;;
 
 (setf test-stream (run-program "plink" (list "-pw" "telecom" "telecom@10.22.98.203") :input :stream :output :stream :wait nil))
 (setf *in* (external-process-input-stream test-stream))
@@ -155,14 +155,14 @@ ghi"))
 	 (format in command-line)
 	 (finish-output in))))
 
-############# X
+;;;; X
 (with-open-stream 
     (test-stream nil)
   (run-program "plink" (list "-pw" "telecom" "telecom@10.22.98.203")
 	       :input :stream :pty t :wait nil)
   (format t (read-line test-stream)))
 
-############# freeze
+;;;; freeze
 
 (let*
     ((proc
@@ -177,7 +177,7 @@ ghi"))
   (format in "exit~%")
   (finish-output in))
 
-############# well done with read-line 
+;;;; well done with read-line 
 
 (let*
     ((proc
@@ -195,7 +195,7 @@ ghi"))
   (format in "exit~%")
   (finish-output in))
 
-############# well done with (sleep 1)
+;;;; well done with (sleep 1)
 
 (let*
     ((proc
@@ -212,7 +212,7 @@ ghi"))
   (format in "exit~%")
   (finish-output in))
 
-############# well done with readchar at first
+;;;; well done with readchar at first
 
 (defun test ()
   (let*
@@ -243,20 +243,20 @@ ghi"))
 
 
 (ccl:save-application "mame.exe"
-		  :toplevel-function #'test
+		  :toplevel-function ;'test
 		  :prepend-kernel t)
 
 
-############# read-char test
+;;;; read-char test
 (defun test2 ()
   (loop
        (let ((temp (read-char)))
-	 (if (equal temp #\z)
+	 (if (equal temp ;\z)
 	     (return)
 	     (print temp)))))
 
 (ccl:save-application "mame.exe"
-		  :toplevel-function #'test2
+		  :toplevel-function ;'test2
 		  :prepend-kernel t)
 
 (progn (unread-char (read-char)) (list (listen) (read-char)))
@@ -281,7 +281,7 @@ ghi"))
 (print 20)
 
 
-############## use listen
+;;;; use listen
 (defun read-from-stream-wait (stream listen-ng-times result)
   (print listen-ng-times)
   (if (< listen-ng-times 0)
@@ -292,7 +292,7 @@ ghi"))
 	(read-from-stream-wait stream (- listen-ng-times 1) result))))
 
 
-############## use listen 2
+;;;; use listen 2 šš
 (defun read-from-stream-wait (stream listen-ng-times result)
   (cond ((< listen-ng-times 0) (coerce result 'string))
 	((listen stream)
@@ -300,7 +300,6 @@ ghi"))
 				(append result (list (read-char stream)))))
 	(t (sleep 0.1)
 	   (read-from-stream-wait stream (- listen-ng-times 1) result))))
-
 
 (defun test (args)
   (let*
@@ -321,3 +320,93 @@ ghi"))
 
 (test (list "plink" "-pw" "telecom" "telecom@192.168.39.105"))
 (test (list "plink" "-pw" "telecom" "telecom@10.22.98.203"))
+
+(defun external-process-exited (external-process)
+  (equal :exited (external-process-status external-process)))
+
+
+
+
+;;;; use class not so good
+(defclass plink ()
+  ((process :accessor plink-process)
+   (instream :accessor plink-in)
+   (outstream :accessor plink-out)))
+
+(defmethod plink-new ((plink-instance plink) (plink-command list))
+  (cond ((or (not (slot-boundp plink-instance 'process))
+	     (null (plink-process plink-instance))
+	     (external-process-exited (plink-process plink-instance)))
+	 (let ((mame (run-program "plink" plink-command
+				  :input :stream :output :stream :wait nil)))
+	   (setf (plink-process plink-instance)
+		 mame
+		 (plink-in plink-instance)
+		 (external-process-input-stream mame)
+		 (plink-out plink-instance)
+		 (external-process-output-stream mame))
+	   plink-instance))
+	(t (format t "Already exists."))))
+   
+
+;;;(let ((mame  (plink-new (make-instance 'plink) '("-pw" "telecom" "telecom@10.22.98.203")))) (print (read-from-stream-wait (plink-out mame) 10 nil)) (format (plink-in mame) "exit~%") (finish-output (plink-in mame)) (sleep 0.03) (external-process-status (plink-process mame))) ;; 0.03 for exiting
+
+
+;;;; heyhey
+(defvar *plink-connection-method* nil)
+(setf *plink-connection-method* nil)
+
+(push (list :input #'plink-connection-inputstream) *plink-connection-method*)
+(push (list :output #'external-process-output-stream) *plink-connection-method*)
+(push (list :status #'external-process-status) *plink-connection-method*)
+
+(defmacro get-plink-connection ()
+	 connection)
+
+(defmethod plink-connection-inputstream ((plink-connection external-process))
+  (let ((mame (get plink-connection
+  (unless instream
+      (setf instream (external-process-input-stream plink-connection))
+      (debug "input-stream-made"))
+    instream))
+
+;; funcall evaluated when run (name ...)
+(defmacro new-plink-connection (name
+				&optional (command '("-pw" "telecom" "telecom@10.22.98.203")))
+  (let ((connection (run-program "plink" command :input :stream :output :stream :wait nil)))
+    `(defun ,name (tag)
+       (cond 
+	 ((equal tag :process) ,connection)
+	 ,@(loop for x in *plink-connection-method* collect
+		`((equal tag ,(car x)) (funcall ,(cadr x) ,connection)))))))
+
+;; funcall evaluated once 
+(defmacro new-plink-connection (name
+				&optional (command '("-pw" "telecom" "telecom@10.22.98.203")))
+  (let ((connection (run-program "plink" command :input :stream :output :stream :wait nil)))
+    `(defun ,name (tag)
+       (cond 
+	 ((equal tag :process) ,connection)
+	 ,@(loop for x in *plink-connection-method* collect
+		`((equal tag ,(car x)) ,(funcall (cadr x) connection)))))))
+
+;;;; well, use class for it takes more work to write in above method, because of the condition judgement of function runs each time and only once
+
+(defclass plink ()
+  ((process :accessor plink-process :initarg :pp)
+   (instream :accessor plink-in :initarg :pi)
+   (outstream :accessor plink-out :initarg :po)))
+
+(defmethod new-plink-connection ((command list))
+  (let ((mame-process
+	 (run-program "plink" command :input :stream :output :stream :wait nil)))
+    (make-instance 'plink
+		   :pp mame-process
+		   :pi (external-process-input-stream mame-process)
+		   :po (external-process-output-stream mame-process))))
+
+(defmethod plink-status ((instance plink))
+  (external-process-status (plink-process instance)))
+
+(defmethod plink-exit
+

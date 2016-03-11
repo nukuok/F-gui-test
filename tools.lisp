@@ -1,9 +1,9 @@
-(defvar *debug-switch*)
-(setf *debug-switch* t)
-  
-(defmacro debug (message &rest parameters)
-  `(when *debug-switch*
-     (format t "~%~A~%" ,message)
-     (loop for x in (list ,@parameters) do
-	  (print x))))
+(in-package sbc-tools)
 
+;;(defun color-html-string (string color)
+;;  (with-html-output-to-string (a) (:font :color color (fmt "~a" string))))
+
+(defun html-string (string &optional color)
+  (cond
+    (color (with-html-output-to-string (a) (:font :color color (fmt "~a" string))))
+    (t (with-html-output-to-string (a) (fmt "~a" string)))))

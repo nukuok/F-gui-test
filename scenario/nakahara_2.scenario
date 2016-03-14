@@ -1,0 +1,55 @@
+#!#!PLINK-COMMAND:
+plink -pw telecom telecom@10.22.98.203
+
+#!#!WAIT-OUTPUT:
+$
+
+#!#!INPUT-COMMAND:
+ssh telecom@192.168.39.105
+
+#!#!WAIT-OUTPUT:
+password:
+
+#!#!INPUT-COMMAND:
+telecom
+
+#!#!WAIT-OUTPUT:
+$
+
+#!#!INPUT-COMMAND:
+ssh defcraft@192.168.18.1
+
+#!#!WAIT-OUTPUT:
+Password:
+
+#!#!INPUT-COMMAND:
+!defcraft
+
+#!#!WAIT-OUTPUT:
+:
+
+#!#!INPUT-COMMAND:
+1
+
+#!#!WAIT-OUTPUT:
+:
+
+#!#!INPUT-COMMAND:
+1
+
+#!#!WAIT-OUTPUT:
+#
+
+#!#!INPUT-COMMAND:
+paging-options disable
+
+#!#!WAIT-OUTPUT:
+#
+
+#!#!INPUT-COMMAND:
+show config here
+
+#!#!WAIT-OUTPUT:
+#
+
+

@@ -86,7 +86,7 @@
 			  (htm (fmt "~a" (plink-get-output *plink*))))))))))
 
 (defparameter *server*
-  (make-instance 'easy-acceptor :address "localhost" :port 4243))
+  (make-instance 'easy-acceptor :address "localhost" :port 4244))
 
 (setq *dispatch-table* (list 'dispatch-easy-handlers
                              (create-ajax-dispatcher *plink-test*)))

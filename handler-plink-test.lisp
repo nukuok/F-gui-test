@@ -1,5 +1,6 @@
 (in-package sbc-tools)
 
+(setf *js-inline-string-delimiter* #\')
 (setf *js-string-delimiter* #\")
 
 (defvar *plink-conversation* nil)
@@ -94,5 +95,4 @@
 	(:p (:textarea :rows 30 :cols 83
 		    :name "result" :class "txt"
 		    (htm (fmt "~a" (plink-phrase "")))))))
-
 

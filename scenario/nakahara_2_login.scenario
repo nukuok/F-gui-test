@@ -29,25 +29,7 @@ Password:
 :
 
 #!#!INPUT-COMMAND:
-1
-
-#!#!WAIT-OUTPUT:
-:
-
-#!#!INPUT-COMMAND:
-1
-
-#!#!WAIT-OUTPUT:
-#
-
-#!#!INPUT-COMMAND:
-paging-options disable
-
-#!#!WAIT-OUTPUT:
-#
-
-#!#!INPUT-COMMAND:
-show config here
+=1 1
 
 #!#!WAIT-OUTPUT:
 #

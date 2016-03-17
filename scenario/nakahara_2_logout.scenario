@@ -1,5 +1,5 @@
 #!#!INPUT-COMMAND:
-Enter
+?
 
 #!#!WAIT-OUTPUT:
 #
@@ -14,22 +14,23 @@ end
 exit
 
 #!#!WAIT-OUTPUT:
-#
+:
 
 #!#!INPUT-COMMAND:
 0
 
 #!#!WAIT-OUTPUT:
-#
+$
 
 #!#!INPUT-COMMAND:
 exit
 
 #!#!WAIT-OUTPUT:
-#
+$
 
 #!#!INPUT-COMMAND:
 exit
 
 #!#!WAIT-OUTPUT:
-#
+$
+

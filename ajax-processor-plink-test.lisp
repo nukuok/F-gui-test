@@ -1,5 +1,5 @@
 (in-package sbc-tools)
-
+n
 (defparameter *plink-test*
   (make-instance 'ajax-processor :server-uri "/plink-conversation-api"))
 
@@ -18,6 +18,4 @@
   (progn
     (log-message* 3 "~A~%" "status")
     (f-plink-status-output *plink*)))
-
-
 

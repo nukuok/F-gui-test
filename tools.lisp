@@ -1,3 +1,8 @@
+(ql:quickload '(:hunchentoot :cl-who :parenscript :smackjack))
+
+(defpackage :sbc-tools
+  (:use :cl :hunchentoot :cl-who :parenscript :smackjack))
+
 (in-package sbc-tools)
 
 ;;(defun color-html-string (string color)
@@ -17,6 +22,9 @@
 				(append result (list (read-char stream)))))
 	(t (sleep 0.1)
 	   (read-from-stream-wait stream (- listen-ng-times 1) result))))
+
+;(defun read-from-stream-wait (stream listen-ng-times result)
+;  (get-output-stream-string stream))
 
 (defclass plink ()
   ((process :accessor plink-process :initarg :pp)
@@ -61,20 +69,49 @@
 
 ;;;; push and extend 2 
 (defmacro push-to-handler-html-head (handler sentence)
-  `(push (with-html-output-to-string (s) ,sentence)
+  `(push (with-html-output-to-string (s nil :indent t) ,sentence)
 	(handler-html-head ,handler)))
 (defmacro push-to-handler-html-body (handler sentence)
-  `(push (with-html-output-to-string (s) ,sentence)
+  `(push (with-html-output-to-string (s nil :indent t) ,sentence)
 	(handler-html-body ,handler)))
 
-;(setf abc "<head></head>")
-;(eval `(with-html-output-to-string (s) (:html ,abc)))
 
-;;(defmacro extend-handler-html-head (handler)
-;;  `(:head ,@(loop for x in (reverse (handler-html-head handler)) collect x)))
+(defun list-scenario ()
+  (directory "scenario/*"))
 
-;;(defmacro extend-handler-html-body (handler)
-;;  `(:body ,@(loop for x in (reverse (handler-html-body handler)) collect x)))
+(defun string-null (mame)
+  (equal mame ""))
 
-;;(defmacro test (mame) `(with-html-output-to-string (s) ,mame))
+(defun string-split (string char &optional result)
+  (let ((char-position (position char string)))
+    (cond ((string-null string) (reverse result))
+	  (char-position (string-split (subseq string (+ 1 char-position))
+		      char (cons (subseq string 0 char-position) result)))
+	  (t (string-split "" char (cons string result))))))
 
+(defun last-1 (mame)
+  (car (last mame)))
+
+(defun filename-from-directory (mame)
+  (last-1 (string-split (princ-to-string mame) #\/)))
+
+(defmacro make-scenario-list-links ()
+  `(with-html-output-to-string (s nil :indent t)
+     ,@(loop for x in (list-scenario) append
+	    (list
+	    `(:strong (:u (:font :color "blue" :style "cursor:pointer;" :onclick
+		 (ps-inline 
+		  (front-scenario-chosen ,(filename-from-directory x)))
+		 "&#x21D2; " ,(filename-from-directory x) )))
+	    `(:br)))))
+
+(defun file-string (path)
+  (with-open-file (stream path)
+    (let ((data (make-string (file-length stream))))
+      (read-sequence data stream)
+      data)))
+
+(defun stream-string (stream)
+  (let ((result (make-sequence 'string (length stream))))
+    (read-sequence result stream)
+    result))

@@ -44,7 +44,7 @@
 
 ;;(defethod plink-exit ())
 (defmethod plink-get-output ((instance plink))
-   (read-from-stream-wait (plink-out instance) 10 nil))
+  (read-from-stream-wait (plink-out instance) 6 nil))
 
 (defmethod plink-command-input ((instance plink) (command string))
   (progn (format (plink-in instance) "~A~%" command)
@@ -53,10 +53,10 @@
 (defun f-plink-status-output (may-be-a-plink)
   (handler-case
       (let ((status (plink-status may-be-a-plink)))
-	(log-message* 4 "plink-status: ~A~%" status)
+	;;(log-message* 4 "plink-status: ~A~%" status)
 	(case status
-	  (:running (html-string status "green"))
-	  (:exited (html-string status "red"))
+	  (:running (html-string "CONNECTED" "green"))
+	  (:exited (html-string "DISCONNECTED" "red"))
 	  (otherse (html-string "~a" status))))
     (CCL:NO-APPLICABLE-METHOD-EXISTS ()
       (html-string "Not connected" "grey"))))

@@ -5,8 +5,9 @@
 
 (defvar *command-sentence*
   '("PLINK-COMMAND"
-  "WAIT-OUTPUT"
-  "INPUT-COMMAND"))
+    "WAIT-OUTPUT"
+    "PAUSE"
+    "INPUT-COMMAND"))
 
 (defun eof-linep (mame)
   (equal mame :eof))
@@ -91,8 +92,10 @@
 	   (cond ((equal command "PLINK-COMMAND")
 		  (format stream "~A" (cadr x))
 		  (setf *plink* (new-plink-connection (cdr (string-to-list (cadr x))))))
+		 ((equal command "PAUSE")
+		  (sleep (parse-integer (cadr x))))
 		 ((equal command "WAIT-OUTPUT")
-		  (let ((output (plink-get-output *plink*)))
+		  (let ((output (remove #\return (plink-get-output *plink*))))
 		  (format stream "~A" output)
 		    (unless (string-equal-last (string-trim " " output) (cadr x))
 		      (return :with-wrong-wait-target))))
@@ -114,5 +117,5 @@
   (let ((in (make-string-input-stream input-string))
 	(out (make-string-output-stream)))
     (scenario-run (scenario-read-from-stream in) out)
-    (get-output-stream-string out)))
+    (remove #\return (get-output-stream-string out))))
 					   

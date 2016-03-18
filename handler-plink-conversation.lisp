@@ -1,7 +1,7 @@
 (in-package sbc-tools)
 
 ;;(scenario-run (scenario-read "scenario/nakahara_2_login.scenario") nil)
-o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
+;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
 
 (setf *js-string-delimiter* #\")
 
@@ -35,6 +35,7 @@ o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
  (:script :type "text/javascript"
  (str (ps
 	(defvar processing #\u)
+	(defvar processing-timer)
 	(defun locked () (equal processing #\l))
 	(defun lock-part ()
 	  (progn
@@ -43,9 +44,9 @@ o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
 		  (processing-string)
 		  )))
 	(defun lock ()
-	  (defvar processing-timer
+	  (setf processing-timer
 		(chain (set-interval
-			lock-part 1000))))
+			lock-part 125))))
 	(defun unlock ()
 	  (progn
 	    (setf processing #\u)
@@ -79,10 +80,13 @@ o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
 	(defun plink-status-query ()
 	    (chain smackjack (plink-status-check
 			      plink-status-callback)))
+	(defvar timer-i-d)
 	(defun set-timer ()
-	  (setf timer-i-d
-		(chain (set-interval
-			plink-status-query 2000))))
+	  (progn
+	    (chain (clear-interval timer-i-d))
+	    (setf timer-i-d
+		  (chain (set-interval
+			  plink-status-query 2000)))))
 	(defun set-iframe (page)
 	  ((chain document
 		  (get-element-by-id "inst")
@@ -94,20 +98,27 @@ o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
  *plink-conversation*
  (:script :type "text/javascript"
  (str (ps
-	(defvar processing-anime-number 4)
+	(defvar processing-anime-number 8)
 	(defun processing-anime-number-update ()
-	  (case processing-anime-number
-	    (1 (setf processing-anime-number 2))
-	    (2 (setf processing-anime-number 3))
-	    (3 (setf processing-anime-number 4))
-	    (4 (setf processing-anime-number 1))))
+	  (if (> processing-anime-number 7)
+	      (setf processing-anime-number 1)
+	      (incf processing-anime-number)))
+;	  (case processing-anime-number
+;	    (1 (setf processing-anime-number 2))
+;	    (2 (setf processing-anime-number 3))
+;	    (3 (setf processing-anime-number 4))
+;	    (4 (setf processing-anime-number 1))))
 	(defun processing-string ()
 	  (progn
 	    (case (processing-anime-number-update)
 	      (1 "<font color='red'> &larr;-PROCESSING-&rarr; </font>")
-	      (2 "<font color='red'> &uarr;-PROCESSING-&uarr; </font>")
-	      (3 "<font color='red'> &rarr;-PROCESSING-&larr; </font>")
-	      (4 "<font color='red'> &darr;-PROCESSING-&darr; </font>"))))
+	      (2 "<font color='red'> &#8598;-PROCESSING-&#8599; </font>")
+	      (3 "<font color='red'> &uarr;-PROCESSING-&uarr; </font>")
+	      (4 "<font color='red'> &#8599;-PROCESSING-&#8598; </font>")
+	      (5 "<font color='red'> &rarr;-PROCESSING-&larr; </font>")
+	      (6 "<font color='red'> &#8600;-PROCESSING-&#8601; </font>")
+	      (7 "<font color='red'> &darr;-PROCESSING-&darr; </font>")
+	      (8 "<font color='red'> &#8601;-PROCESSING-&#8600; </font>"))))
 	))))
 
 (push-to-handler-html-head
@@ -140,6 +151,9 @@ o;;(scenario-run (scenario-read "scenario/nakahara_2_logout.scenario") nil)
 	    (setf (chain document
 			 (get-element-by-id "result")
 			 value) response)
+	    (setf (chain document
+			 (get-element-by-id "commandarea")
+			 value) "config")
 	    (setf (chain document (get-element-by-id "result") scroll-top)
 		  (chain document (get-element-by-id "result") scroll-height))))
 	(defun front-run-scenario-clicked ()

@@ -12,7 +12,7 @@
   (handler-case
       (progn 
 	(plink-command-input *plink* def)
-	(plink-get-output *plink*))
+	(remove #\return (plink-get-output *plink*)))
     (CCL:NO-APPLICABLE-METHOD-EXISTS () "")
     (CCL::SIMPLE-STREAM-ERROR () "")))
 
@@ -34,6 +34,5 @@
 (defun-ajax ajax-run-scenario (scenario) (*ajax-processor-plink-conversation*
 					  :callback-data :response-text)
   (log-message* 3 "~A" scenario)
-  (scenario-run-from-string-to-string scenario)
-  (log-message* 3 "okokoktohere~A"))
+  (scenario-run-from-string-to-string scenario))
 

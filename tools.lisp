@@ -44,7 +44,7 @@
 
 ;;(defethod plink-exit ())
 (defmethod plink-get-output ((instance plink))
-  (read-from-stream-wait (plink-out instance) 6 nil))
+  (read-from-stream-wait (plink-out instance) 10 nil))
 
 (defmethod plink-command-input ((instance plink) (command string))
   (progn (format (plink-in instance) "~A~%" command)

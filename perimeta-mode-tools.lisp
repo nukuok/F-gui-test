@@ -21,10 +21,11 @@
 
 (defun pm-is-candidate (line)
   (let ((l (length *head-for-candidates*)))
-  (and (string-equal *head-for-candidates* line
-		     :end2 l)
-       (pm-is-alphabet (nth l (coerce line 'list)))
-       (car (string-split (string-trim " " line) #\space)))))
+    (and (<= l (length line))
+	 (string-equal *head-for-candidates* line
+		       :end2 l)
+	 (pm-is-alphabet (nth l (coerce line 'list)))
+	 (car (string-split (string-trim " " line) #\space)))))
 
 (defun pm-get-candidates (&optional input-command)
   (let ((question-result (string-split (pm-get-question input-command) #\newline)))
@@ -57,8 +58,25 @@
   (member "% Incomplete command." (string-split mame #\newline)
 	  :test #'string-equal-base))
 
+(defun invalid-input-p (mame)
+  (member "% Invalid input" (string-split mame #\newline)
+	  :test #'string-equal-base))
+
 (defun last-char (mame)
   (last-1 (coerce mame 'list)))
+
+(defun equal-tree-element (base-element eva-element)
+  (let ((base-splited (remove nil (string-split base-element #\space)))
+	(eva-splited (remove nil (string-split eva-element #\space))))
+    (and (= (length base-splited) (length eva-splited))
+	 (loop for x in base-splited for y in eva-splited collect
+	      (string-equal-base x y)))))
+
+(defun member-tree-element (element tree)
+  (member element tree :test
+	  (lambda (x y)
+	    (and (loop for a in x for b in y collect (or a b))))))
+	   
 
 (let ((last-prompt "#"))
   (defun pm-command-input (input-command)
@@ -67,33 +85,28 @@
       (let* ((output-result (remove #\return (plink-get-output *plink*)))
 	     (new-prompt (pm-get-last-prompt output-result)))
 	(cond
+	  ((invalid-input-p output-result)
+	   (setf *current-command-area* input-command))
 	  ((not (equal (last-char new-prompt) #\#))
 	   (setf *current-command-area* ""))
 	  ((submode-changed-p last-prompt new-prompt)
 	   (push input-command *current-tree*)
 	   (setf *current-command-area* "")
 	   (setf *current-candidates-list* (remove nil (pm-get-candidates))))
-	  ((contain-char #\%  output-result)
-	   (setf *current-command-area* input-command))
+	  ((incomplete-command-p  output-result)
+	   (setf *current-command-area* input-command)
+	   (setf *current-candidates-list* (remove nil (pm-get-candidates))))
 	  (t
 	   (setf *current-command-area* "")))
 	(setf last-prompt new-prompt))
       (list *current-tree* *current-command-area* *current-candidates-list*))))
 
-(defun pm-command-output ()
-  (
+;;(defun pm-command-output ()
+;;  (
 
 
-    (setf *current-candidates-list* (remove nil (pm-get-candidates)))
-	 (let 	((output-result (remove #\return (plink-get-output *plink*)))
-	 (temp-current-candidates-list (remove nil (pm-get-candidates))))
-    (or (equal temp-current-candidates-list *current-candidates-list*)
-	(progn 
-  (push input-command *current-configuration-position*)
-	  (setf *current-candidates-list* temp-current-candidates-list)))
-    output-result))
   
 
 (defun pm-candidate-chosen (input-command)
   (plink-command-input *plink* input-command)
-  (let 	((output-result (remove #\return (plink-get-output *plink*))))
+  (let 	((output-result (remove #\return (plink-get-output *plink*))))))

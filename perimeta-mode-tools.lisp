@@ -17,7 +17,7 @@
 
 (defun pm-is-alphabet (mame)
   (let ((cc (char-code mame)))
-    (or (< 96 cc 123) (< 64 cc 91))))
+    (or (< 47 cc 58) (< 96 cc 123) (< 64 cc 91))))
 
 (defun pm-is-candidate (line)
   (let ((l (length *head-for-candidates*)))
@@ -51,15 +51,15 @@
 (defun string-equal-base (base-string eva-string)
   (let ((length-base (length base-string))
 	(length-eva (length eva-string)))
-    (and (< length-base length-eva)
+    (and (<= length-base length-eva)
 	 (string-equal base-string eva-string :end2 length-base))))
 
 (defun incomplete-command-p (mame)
-  (member "% Incomplete command." (string-split mame #\newline)
+  (member "% Incomplete command." (string-split (remove #\return mame) #\newline)
 	  :test #'string-equal-base))
 
 (defun invalid-input-p (mame)
-  (member "% Invalid input" (string-split mame #\newline)
+  (member "% Invalid input" (string-split (remove #\return mame) #\newline)
 	  :test #'string-equal-base))
 
 (defun last-char (mame)
@@ -78,33 +78,76 @@
 	    (and (loop for a in x for b in y collect (or a b))))))
 	   
 
-(let ((last-prompt "#"))
-  (defun pm-command-input (input-command)
-    (progn
-      (plink-command-input *plink* input-command)
-      (let* ((output-result (remove #\return (plink-get-output *plink*)))
-	     (new-prompt (pm-get-last-prompt output-result)))
-	(cond
-	  ((invalid-input-p output-result)
-	   (setf *current-command-area* input-command))
-	  ((not (equal (last-char new-prompt) #\#))
-	   (setf *current-command-area* ""))
-	  ((submode-changed-p last-prompt new-prompt)
-	   (push input-command *current-tree*)
-	   (setf *current-command-area* "")
-	   (setf *current-candidates-list* (remove nil (pm-get-candidates))))
-	  ((incomplete-command-p  output-result)
-	   (setf *current-command-area* input-command)
-	   (setf *current-candidates-list* (remove nil (pm-get-candidates))))
-	  (t
-	   (setf *current-command-area* "")))
-	(setf last-prompt new-prompt))
-      (list *current-tree* *current-command-area* *current-candidates-list*))))
+(defun submode-included-in-current-tree (mame)
+  (let ((submode-position
+	 (position mame *current-tree* :test (lambda (x y) (equal x (car y))))))
+    (nthcdr (+ (or submode-position -1) 1) *current-tree*)))
+;; remove adjacency-submode when change from adjacency to adjacency
+
+
+(defun make-new-current-tree (mame input-command)
+  (cons (list mame input-command)
+	(submode-included-in-current-tree mame)))
+
+(defun pm-command-input (input-command)
+  (progn
+    (plink-command-input *plink* input-command)
+    (let* ((output-result (remove #\return (plink-get-output *plink*)))
+	   (new-prompt (pm-get-last-prompt output-result)))
+      (cond
+	((invalid-input-p output-result)
+	 (setf *current-command-area* "")
+	 (setf *current-candidates-list* (remove nil (pm-get-candidates))))
+	((not (equal (last-char new-prompt) #\#))
+	 (setf *current-command-area* ""))
+	((incomplete-command-p  output-result)
+	 (setf *current-command-area* input-command)
+	 (setf *current-candidates-list*
+	       (remove nil (pm-get-candidates input-command))))
+	(t
+	 (setf *current-tree* (make-new-current-tree new-prompt input-command))
+	 (setf *current-command-area* "")
+	 (setf *current-candidates-list* (remove nil (pm-get-candidates))))))
+    (list *current-tree* *current-command-area* *current-candidates-list*)))
 
 ;;(defun pm-command-output ()
 ;;  (
+(defun reverse-list (list)
+  (reverse (coerce list 'sequence)))
+
+(defun pm-command-output-current-tree ()
+  `(with-html-output-to-string (s nil :indent t)
+    (:div
+     (:strong (:u (:font :color "blue" :style "cursor:pointer;"
+			 :onclick (ps-inline front-input-command "end")
+			 "#")))
+     ,@(loop for x in (reverse *current-tree*) append
+	    (list
+	     " &gt; "
+	     `(:strong (:u (:font :color "blue" :style "cursor:pointer;"
+				  :onclick (ps-inline (ajax-input-command ,(cadr x)))
+									  ,(cadr x)))))))))
+
+(defun pm-command-output-candidate ()
+  `(with-html-output-to-string (s nil :indent t)
+     (:div
+      ,@(loop for x in *current-candidates-list* append
+	     (list
+	      `(:br) "=&gt;"
+	      `(:strong (:u (:font :color "blue" :style "cursor:pointer;"
+				 :onclock (ps-inline (front-move-to-commandare ,x)) ,x))))))))
+
+(defun pm-command-output ()
+  (concatenate 'string
+	       *current-command-area*
+	       "#;#"
+	       (eval (pm-command-output-current-tree))
+	       (eval (pm-command-output-candidate))))
+
+
 
 (defun pm-candidate-chosen (input-command)
   (plink-command-input *plink* input-command)
   (let 	((output-result (remove #\return (plink-get-output *plink*))))))
+
 

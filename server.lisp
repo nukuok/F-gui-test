@@ -1,7 +1,7 @@
 (in-package sbc-tools)
 
 (defparameter *server*
-  (make-instance 'easy-acceptor :address "localhost" :port 4247))
+  (make-instance 'easy-acceptor :address "localhost" :port 4242))
 
 (setf (acceptor-document-root *server*) "./")
 

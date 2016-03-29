@@ -60,13 +60,49 @@
 	  (str (ps
 		 (defun front-show-scenario-list (response)
 		   (setf (chain document
-				(get-element-by-id "canditate")
+				(get-element-by-id "candidate")
 				inner-h-t-m-l)
 			 response))
 		 (defun front-update-scenario-list ()
 		   (chain smackjack (ajax-show-scenario-list
 				     front-show-scenario-list)))
 		 (front-update-scenario-list)))))
+
+(push-to-handler-html-head
+ *plink-conversation*
+ (:script :type "text/javascript"
+	  (str (ps
+		 (defvar perimeta-mode 1)
+		 (defun perimeta-button-string ()
+		   (case perimeta-mode
+		     (0 "PERIMETA mode <font color='red'> OFF </font>")
+		     (1 "PERIMETA mode <font color='green'> ON </font>")))
+		 (defun switch-perimeta-mode ()
+		   (progn
+		     (setf perimeta-mode (- 1 perimeta-mode))
+		     (setf (chain document
+				  (get-element-by-id "perimeta-mode-button")
+				  inner-h-t-m-l)
+			   (perimeta-button-string))))
+		 (switch-perimeta-mode)))))
+
+(push-to-handler-html-head
+ *plink-conversation*
+ (:script :type "text/javascript"
+	  (str (ps
+		 (defvar auto-manual 1)
+		 (defun auto-manual-string ()
+		   (case auto-manual
+		     (0 "MANUAL auto switch <font color='red'> OFF </font>")
+		     (1 "MANUAL auto switch <font color='green'> ON </font>")))
+		 (defun switch-auto-manual ()
+		   (progn
+		     (setf auto-manual (- 1 auto-manual))
+		     (setf (chain document
+				  (get-element-by-id "auto-manual-button")
+				  inner-h-t-m-l)
+			   (auto-manual-string))))
+		 (switch-auto-manual)))))
 
 (push-to-handler-html-head
  *plink-conversation*
@@ -171,6 +207,27 @@
  *plink-conversation*
  (:script :type "text/javascript"
  (str (ps
+	(defvar splitted-response)
+	(defun callback-pm (response)
+	  (progn
+	    (unlock)
+	    (setf splitted-response (chain response (split "#;#")))
+	    (setf (chain document
+			 (get-element-by-id "commandarea")
+			 value)
+		  (getprop splitted-response 0))
+	    (setf (chain document
+			 (get-element-by-id "candidate")
+			 inner-h-t-m-l)
+		  (getprop splitted-response 1))))
+	(defun on-click-pm ()
+	  (when (not (locked))
+	    (lock)
+	    (chain smackjack (ajax-perimeta-mode-command-input
+			      (chain document
+				     (get-element-by-id "commandarea")
+				     value)
+			      callback-pm))))
 	(defun callback (response)
 	  (progn
 	    (unlock)
@@ -180,13 +237,15 @@
 	    (setf (chain document (get-element-by-id "result") scroll-top)
 		  (chain document (get-element-by-id "result") scroll-height))))
 	(defun on-click ()
-	  (when (not (locked))
-	    (lock)
-	    (chain smackjack (plink-phrase
-			    (chain document
-				   (get-element-by-id "commandarea")
-				   value)
-			    callback))))))))
+	  (if (= perimeta-mode 0)
+	      (when (not (locked))
+		(lock)
+		(chain smackjack (plink-phrase
+				  (chain document
+					 (get-element-by-id "commandarea")
+					 value)
+				  callback)))
+	      (on-click-pm) ))))))
 
 (defvar *area1* nil)
 (setf *area1*
@@ -206,8 +265,9 @@
 	  (:td :colspan 2 :width "100"
 	       (:button :style "width: 200px" :type "button"
 			:onlick (ps-inline (front-update-scenario-list)) "List Scenario"))
-	  (:td :colspan 2 (:button :style "width: 200px"
-				   :type "button" "PERIMETA mode ON"))
+	  (:td :colspan 2 (:button :style "width: 200px" :id "perimeta-mode-button"
+				  :onclick (ps-inline (switch-perimeta-mode))
+				  "PERIMETA mode <font color='red'> OFF </font>"))
 	  )
 	 (:tr
 	  (:td :colspan 2  
@@ -216,8 +276,9 @@
 	  (:td :colspan 2 (:button :style "width: 200px"
 				   :onclick (ps-inline (plink-status-query))
 				   :type "button" "Status Update"))
-	  (:td :colspan 2 (:button :style "width: 200px"
-				   :type "button" "MANUAL auto switching ON"))
+	  (:td :colspan 2 (:button :style "width: 200px" :id "auto-manual-button"
+				   :onclick (ps-inline (switch-auto-manual))
+				   "MANUAL auto switch <font color='red'> OFF </font>"))
 	  )
 	 (:tr
 	  (:td :colspan 6 (:p (:textarea :rows 16 :cols 75 :id "result" :class "txt" ))))
@@ -243,8 +304,9 @@
   (:tr
    (:td (:textarea :rows 12 :cols 76
 		   :id "tree" :class "txt"))
-   (:td :width "100" :height "100" :style "border: 1px solid black;" :valign "top"
-	:id "canditate"))))
+   (:td :style "border: 1px solid black;" :valign "top"
+	(:div :style "width:625px; height:180px; overflow:auto;" 
+	:id "candidate")))))
 
 ;;   (:td (:textarea :rows 12 :cols 76
 ;;		   :id "canditate" :class "txt")))))

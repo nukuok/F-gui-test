@@ -36,3 +36,8 @@
   (log-message* 3 "~A" scenario)
   (scenario-run-from-string-to-string scenario))
 
+(defun-ajax ajax-perimeta-mode-command-input (command) (*ajax-processor-plink-conversation*
+							:callback-data :response-text)
+  (log-message* 3 "~A" command)
+  (pm-command-input command)
+  (pm-command-output))

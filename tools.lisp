@@ -115,3 +115,4 @@
   (let ((result (make-sequence 'string (length stream))))
     (read-sequence result stream)
     result))
+

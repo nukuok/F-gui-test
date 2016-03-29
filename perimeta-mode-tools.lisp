@@ -104,9 +104,7 @@
 ;;(defun pm-command-output ()
 ;;  (
 
-
-  
-
 (defun pm-candidate-chosen (input-command)
   (plink-command-input *plink* input-command)
   (let 	((output-result (remove #\return (plink-get-output *plink*))))))
+
